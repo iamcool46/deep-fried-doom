@@ -1,3 +1,11 @@
-ok so i tried porting doom to windows with Ai right? but Uhmmmmm lets just say that the repo name is for a reason
+So yeah… I tried porting DOOM to Windows with AI. Let’s just say the repo name isn’t lying. 😅
 
-Btw you still need the doom Wads for this to work, just saying man
+Heads up: you’ll still need your own DOOM WADs to actually run this. 
+
+For legal reasons, this is strictly a DOOM MOD — no original WADs included.
+
+and also it crashes if you stay on the menu screen too long
+if you open automap with tab
+basically anything i am way to scared to open this
+
+its super unstable so UHHHHHH ok i guess
