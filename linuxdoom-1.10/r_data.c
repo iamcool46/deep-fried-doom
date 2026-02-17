@@ -27,6 +27,7 @@
 static const char
 rcsid[] = "$Id: r_data.c,v 1.4 1997/02/03 16:47:55 b1 Exp $";
 
+#include <stdint.h>
 #include "i_system.h"
 #include "z_zone.h"
 
@@ -42,7 +43,11 @@ rcsid[] = "$Id: r_data.c,v 1.4 1997/02/03 16:47:55 b1 Exp $";
 #include "r_sky.h"
 
 #ifdef LINUX
-#include  <alloca.h>
+#include <alloca.h>
+#endif
+#ifdef _WIN32
+#include <malloc.h>
+#define alloca _alloca
 #endif
 
 
@@ -66,6 +71,10 @@ rcsid[] = "$Id: r_data.c,v 1.4 1997/02/03 16:47:55 b1 Exp $";
 // into the rectangular texture space using origin
 // and possibly other attributes.
 //
+#ifdef _MSC_VER
+#pragma pack(push, 1)
+#endif
+
 typedef struct
 {
     short	originx;
@@ -87,10 +96,16 @@ typedef struct
     boolean		masked;	
     short		width;
     short		height;
-    void		**columndirectory;	// OBSOLETE
+    // On-disk TEXTURE1/TEXTURE2 format stores an int here (not a pointer).
+    // Using a pointer breaks structure layout on 64-bit builds.
+    int			columndirectory;	// OBSOLETE
     short		patchcount;
     mappatch_t	patches[1];
 } maptexture_t;
+
+#ifdef _MSC_VER
+#pragma pack(pop)
+#endif
 
 
 // A single patch from a texture definition,
@@ -379,24 +394,32 @@ void R_GenerateLookup (int texnum)
 //
 // R_GetColumn
 //
+
+// Defensive: static dummy column for missing textures
+static byte dummy_column[8] = {0xff, 0, 0, 0, 0, 0, 0, 0};
+
 byte*
 R_GetColumn
-( int		tex,
-  int		col )
+( int tex,
+  int col )
 {
-    int		lump;
-    int		ofs;
-	
+    int lump;
+    int ofs;
+    if (tex < 0 || tex >= numtextures) {
+        return dummy_column;
+    }
     col &= texturewidthmask[tex];
     lump = texturecolumnlump[tex][col];
     ofs = texturecolumnofs[tex][col];
-    
-    if (lump > 0)
-	return (byte *)W_CacheLumpNum(lump,PU_CACHE)+ofs;
-
+    if (lump > 0) {
+        byte* p = (byte *)W_CacheLumpNum(lump, PU_CACHE);
+        if (!p) return dummy_column;
+        return p + ofs;
+    }
     if (!texturecomposite[tex])
-	R_GenerateComposite (tex);
-
+        R_GenerateComposite(tex);
+    if (!texturecomposite[tex])
+        return dummy_column;
     return texturecomposite[tex] + ofs;
 }
 
@@ -452,8 +475,16 @@ void R_InitTextures (void)
     
     for (i=0 ; i<nummappatches ; i++)
     {
-	strncpy (name,name_p+i*8, 8);
-	patchlookup[i] = W_CheckNumForName (name);
+        strncpy(name, name_p + i * 8, 8);
+        name[8] = 0;
+        // Uppercase for consistency
+        for (int k = 0; k < 8; ++k) {
+            if (name[k] >= 'a' && name[k] <= 'z') name[k] -= 32;
+        }
+        patchlookup[i] = W_CheckNumForName(name);
+        if (patchlookup[i] == -1) {
+            printf("[DEBUG] Patch name not found in WAD: '%s' (index %d)\n", name, i);
+        }
     }
     Z_Free (names);
     
@@ -503,59 +534,71 @@ void R_InitTextures (void)
 	
     for (i=0 ; i<numtextures ; i++, directory++)
     {
-	if (!(i&63))
-	    printf (".");
+        if (!(i&63))
+            printf (".");
 
-	if (i == numtextures1)
-	{
-	    // Start looking in second texture file.
-	    maptex = maptex2;
-	    maxoff = maxoff2;
-	    directory = maptex+1;
-	}
-		
-	offset = LONG(*directory);
+        if (i == numtextures1)
+        {
+            // Start looking in second texture file.
+            maptex = maptex2;
+            maxoff = maxoff2;
+            directory = maptex+1;
+        }
 
-	if (offset > maxoff)
-	    I_Error ("R_InitTextures: bad texture directory");
-	
-	mtexture = (maptexture_t *) ( (byte *)maptex + offset);
+        offset = LONG(*directory);
 
-	texture = textures[i] =
-	    Z_Malloc (sizeof(texture_t)
-		      + sizeof(texpatch_t)*(SHORT(mtexture->patchcount)-1),
-		      PU_STATIC, 0);
-	
-	texture->width = SHORT(mtexture->width);
-	texture->height = SHORT(mtexture->height);
-	texture->patchcount = SHORT(mtexture->patchcount);
+        if (offset > maxoff)
+            I_Error ("R_InitTextures: bad texture directory");
 
-	memcpy (texture->name, mtexture->name, sizeof(texture->name));
-	mpatch = &mtexture->patches[0];
-	patch = &texture->patches[0];
+        mtexture = (maptexture_t *) ( (byte *)maptex + offset);
 
-	for (j=0 ; j<texture->patchcount ; j++, mpatch++, patch++)
-	{
-	    patch->originx = SHORT(mpatch->originx);
-	    patch->originy = SHORT(mpatch->originy);
-	    patch->patch = patchlookup[SHORT(mpatch->patch)];
-	    if (patch->patch == -1)
-	    {
-		I_Error ("R_InitTextures: Missing patch in texture %s",
-			 texture->name);
-	    }
-	}		
-	texturecolumnlump[i] = Z_Malloc (texture->width*2, PU_STATIC,0);
-	texturecolumnofs[i] = Z_Malloc (texture->width*2, PU_STATIC,0);
+        texture = textures[i] =
+            Z_Malloc (sizeof(texture_t)
+                  + sizeof(texpatch_t)*(SHORT(mtexture->patchcount)-1),
+                  PU_STATIC, 0);
 
-	j = 1;
-	while (j*2 <= texture->width)
-	    j<<=1;
+        texture->width = SHORT(mtexture->width);
+        texture->height = SHORT(mtexture->height);
+        texture->patchcount = SHORT(mtexture->patchcount);
 
-	texturewidthmask[i] = j-1;
-	textureheight[i] = texture->height<<FRACBITS;
-		
-	totalwidth += texture->width;
+        memcpy (texture->name, mtexture->name, sizeof(texture->name));
+        // Ensure texture name is uppercased and zero-terminated
+        for (int k = 0; k < 8; ++k) {
+            if (texture->name[k] >= 'a' && texture->name[k] <= 'z') texture->name[k] -= 32;
+        }
+        texture->name[7] = 0;
+
+        mpatch = &mtexture->patches[0];
+        patch = &texture->patches[0];
+
+        for (j=0 ; j<texture->patchcount ; j++, mpatch++, patch++)
+        {
+            patch->originx = SHORT(mpatch->originx);
+            patch->originy = SHORT(mpatch->originy);
+            short patch_index = SHORT(mpatch->patch);
+            if (patch_index < 0 || patch_index >= nummappatches) {
+                printf("[DEBUG] Patch index %d out of bounds in texture %s (texture %d/%d)\n", patch_index, texture->name, i, numtextures);
+                I_Error("R_InitTextures: Patch index %d out of bounds in texture %s", patch_index, texture->name);
+            }
+            patch->patch = patchlookup[patch_index];
+            if (patch->patch == -1)
+            {
+                printf("[DEBUG] Missing patch for texture %s, patch index %d (name: %s)\n", texture->name, patch_index, name_p + patch_index * 8);
+                I_Error ("R_InitTextures: Missing patch in texture %s",
+                     texture->name);
+            }
+        }
+        texturecolumnlump[i] = Z_Malloc (texture->width*2, PU_STATIC,0);
+        texturecolumnofs[i] = Z_Malloc (texture->width*2, PU_STATIC,0);
+
+        j = 1;
+        while (j*2 <= texture->width)
+            j<<=1;
+
+        texturewidthmask[i] = j-1;
+        textureheight[i] = texture->height<<FRACBITS;
+
+        totalwidth += texture->width;
     }
 
     Z_Free (maptex1);
@@ -639,7 +682,7 @@ void R_InitColormaps (void)
     lump = W_GetNumForName("COLORMAP"); 
     length = W_LumpLength (lump) + 255; 
     colormaps = Z_Malloc (length, PU_STATIC, 0); 
-    colormaps = (byte *)( ((int)colormaps + 255)&~0xff); 
+    colormaps = (byte *)(((uintptr_t)colormaps + 255) & ~0xff); 
     W_ReadLump (lump,colormaps); 
 }
 
@@ -723,8 +766,45 @@ int	R_TextureNumForName (char* name)
 
     if (i==-1)
     {
-	I_Error ("R_TextureNumForName: %s not found",
-		 name);
+        char namet[9];
+        int k, all_dots = 1;
+        memcpy(namet, name, 8);
+        namet[8] = 0;
+        for (k = 0; k < 8; k++)
+        {
+            unsigned char c = (unsigned char)namet[k];
+            if (c < 32 || c > 126)
+                namet[k] = '.';
+            if (namet[k] != '.' && namet[k] != 0)
+                all_dots = 0;
+        }
+        // Log missing texture name
+        printf("[DEBUG] Missing texture: '%.8s'\n", namet);
+        fflush(stdout);
+        // Print warning and return fallback texture index
+        printf("[WARNING] Missing texture: '%.8s' -- substituting default.\n", namet);
+        fflush(stdout);
+        // Fallback: use first texture as default
+        if (numtextures > 0)
+            return 0;
+        else
+            return -1;
+        // If name is all dots or empty, skip error
+        if (all_dots || namet[0] == 0)
+        {
+            return -1;
+        }
+        // Otherwise, show error as before
+        unsigned char b0 = (unsigned char)name[0];
+        unsigned char b1 = (unsigned char)name[1];
+        unsigned char b2 = (unsigned char)name[2];
+        unsigned char b3 = (unsigned char)name[3];
+        unsigned char b4 = (unsigned char)name[4];
+        unsigned char b5 = (unsigned char)name[5];
+        unsigned char b6 = (unsigned char)name[6];
+        unsigned char b7 = (unsigned char)name[7];
+        I_Error("R_TextureNumForName: '%.8s' not found (bytes %02X %02X %02X %02X %02X %02X %02X %02X)",
+            namet, b0,b1,b2,b3,b4,b5,b6,b7);
     }
     return i;
 }
@@ -843,6 +923,11 @@ void R_PrecacheLevel (void)
 	}
     }
 }
+
+
+
+
+
 
 
 

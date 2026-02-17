@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}</ProjectGuid>
+    <RootNamespace>DOOM</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v145</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v145</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v145</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v145</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)obj\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
+    <ClCompile>
+      <PreprocessorDefinitions>_WIN32;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)linuxdoom-1.10;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <AdditionalDependencies>user32.lib;kernel32.lib;comdlg32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)obj\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
+    <ClCompile>
+      <PreprocessorDefinitions>_WIN32;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)linuxdoom-1.10;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <AdditionalDependencies>user32.lib;kernel32.lib;comdlg32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)obj\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
+    <ClCompile>
+      <PreprocessorDefinitions>_WIN32;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)linuxdoom-1.10;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <AdditionalDependencies>user32.lib;kernel32.lib;comdlg32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)obj\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
+    <ClCompile>
+      <PreprocessorDefinitions>_WIN32;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)linuxdoom-1.10;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <AdditionalDependencies>user32.lib;kernel32.lib;comdlg32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Link>
+      <AdditionalDependencies>user32.lib;kernel32.lib;gdiplus.lib;gdi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="linuxdoom-1.10\am_map.c" />
+    <ClCompile Include="linuxdoom-1.10\d_items.c" />
+    <ClCompile Include="linuxdoom-1.10\d_main.c" />
+    <ClCompile Include="linuxdoom-1.10\d_net.c" />
+    <ClCompile Include="linuxdoom-1.10\doomdef.c" />
+    <ClCompile Include="linuxdoom-1.10\doomstat.c" />
+    <ClCompile Include="linuxdoom-1.10\dstrings.c" />
+    <ClCompile Include="linuxdoom-1.10\f_finale.c" />
+    <ClCompile Include="linuxdoom-1.10\f_wipe.c" />
+    <ClCompile Include="linuxdoom-1.10\g_game.c" />
+    <ClCompile Include="linuxdoom-1.10\hu_lib.c" />
+    <ClCompile Include="linuxdoom-1.10\hu_stuff.c" />
+    <ClCompile Include="linuxdoom-1.10\i_net_win.c" />
+    <ClCompile Include="linuxdoom-1.10\i_sound_win.c" />
+    <ClCompile Include="linuxdoom-1.10\i_system_win.c" />
+    <ClCompile Include="linuxdoom-1.10\i_video_win.c" />
+    <ClCompile Include="linuxdoom-1.10\info.c" />
+    <ClCompile Include="linuxdoom-1.10\m_argv.c" />
+    <ClCompile Include="linuxdoom-1.10\m_bbox.c" />
+    <ClCompile Include="linuxdoom-1.10\m_cheat.c" />
+    <ClCompile Include="linuxdoom-1.10\m_fixed.c" />
+    <ClCompile Include="linuxdoom-1.10\m_menu.c" />
+    <ClCompile Include="linuxdoom-1.10\menu_wad.c" />
+    <ClCompile Include="linuxdoom-1.10\m_misc.c" />
+    <ClCompile Include="linuxdoom-1.10\m_random.c" />
+    <ClCompile Include="linuxdoom-1.10\m_swap.c" />
+    <ClCompile Include="linuxdoom-1.10\p_ceilng.c" />
+    <ClCompile Include="linuxdoom-1.10\p_doors.c" />
+    <ClCompile Include="linuxdoom-1.10\p_enemy.c" />
+    <ClCompile Include="linuxdoom-1.10\p_floor.c" />
+    <ClCompile Include="linuxdoom-1.10\p_inter.c" />
+    <ClCompile Include="linuxdoom-1.10\p_lights.c" />
+    <ClCompile Include="linuxdoom-1.10\p_map.c" />
+    <ClCompile Include="linuxdoom-1.10\p_maputl.c" />
+    <ClCompile Include="linuxdoom-1.10\p_mobj.c" />
+    <ClCompile Include="linuxdoom-1.10\p_plats.c" />
+    <ClCompile Include="linuxdoom-1.10\p_pspr.c" />
+    <ClCompile Include="linuxdoom-1.10\p_saveg.c" />
+    <ClCompile Include="linuxdoom-1.10\p_setup.c" />
+    <ClCompile Include="linuxdoom-1.10\p_sight.c" />
+    <ClCompile Include="linuxdoom-1.10\p_spec.c" />
+    <ClCompile Include="linuxdoom-1.10\p_switch.c" />
+    <ClCompile Include="linuxdoom-1.10\p_telept.c" />
+    <ClCompile Include="linuxdoom-1.10\p_tick.c" />
+    <ClCompile Include="linuxdoom-1.10\p_user.c" />
+    <ClCompile Include="linuxdoom-1.10\r_bsp.c" />
+    <ClCompile Include="linuxdoom-1.10\r_data.c" />
+    <ClCompile Include="linuxdoom-1.10\r_draw.c" />
+    <ClCompile Include="linuxdoom-1.10\r_main.c" />
+    <ClCompile Include="linuxdoom-1.10\r_plane.c" />
+    <ClCompile Include="linuxdoom-1.10\r_segs.c" />
+    <ClCompile Include="linuxdoom-1.10\r_sky.c" />
+    <ClCompile Include="linuxdoom-1.10\r_things.c" />
+    <ClCompile Include="linuxdoom-1.10\s_sound.c" />
+    <ClCompile Include="linuxdoom-1.10\sounds.c" />
+    <ClCompile Include="linuxdoom-1.10\st_lib.c" />
+    <ClCompile Include="linuxdoom-1.10\st_stuff.c" />
+    <ClCompile Include="linuxdoom-1.10\tables.c" />
+    <ClCompile Include="linuxdoom-1.10\v_video.c" />
+    <ClCompile Include="linuxdoom-1.10\w_wad.c" />
+    <ClCompile Include="linuxdoom-1.10\wi_stuff.c" />
+    <ClCompile Include="linuxdoom-1.10\win_main.c" />
+    <ClCompile Include="linuxdoom-1.10\z_zone.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="z_zone.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

@@ -25,12 +25,23 @@
 static const char
 rcsid[] = "$Id: m_menu.c,v 1.7 1997/02/03 22:45:10 b1 Exp $";
 
+#ifdef _WIN32
+#include <stdlib.h>
+#include <io.h>
+#include <fcntl.h>
+#include <ctype.h>
+#define O_RDONLY _O_RDONLY
+#define open _open
+#define read _read
+#define close _close
+#else
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <stdlib.h>
 #include <ctype.h>
+#endif
 
 
 #include "doomdef.h"
@@ -522,7 +533,11 @@ void M_ReadSaveStrings(void)
 	else
 	    sprintf(name,SAVEGAMENAME"%d.dsg",i);
 
+#ifdef _WIN32
+	handle = open (name, O_RDONLY);
+#else
 	handle = open (name, O_RDONLY | 0, 0666);
+#endif
 	if (handle == -1)
 	{
 	    strcpy(&savegamestrings[i][0],EMPTYSTRING);

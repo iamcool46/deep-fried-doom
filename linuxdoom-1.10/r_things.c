@@ -97,7 +97,6 @@ char*		spritename;
 
 
 
-
 //
 // R_InstallSpriteLump
 // Local function for R_InitSprites.
@@ -185,32 +184,49 @@ void R_InitSpriteDefs (char** namelist)
     int		start;
     int		end;
     int		patched;
-		
+
     // count the number of sprite names
     check = namelist;
     while (*check != NULL)
-	check++;
+        check++;
 
     numsprites = check-namelist;
-	
+
+    // Defensive fix: ensure all entries up to numsprites-1 are valid pointers
+    // and that the list is properly null-terminated.
+    // If not, adjust numsprites to the last valid entry.
+    for (i = 0; i < numsprites; i++) {
+        if (!namelist[i] || (uintptr_t)namelist[i] < 0x10000) {
+            numsprites = i;
+            break;
+        }
+    }
+
     if (!numsprites)
-	return;
-		
+        return;
+
     sprites = Z_Malloc(numsprites *sizeof(*sprites), PU_STATIC, NULL);
-	
+
     start = firstspritelump-1;
     end = lastspritelump+1;
-	
+
     // scan all the lump names for each of the names,
     //  noting the highest frame letter.
     // Just compare 4 characters as ints
     for (i=0 ; i<numsprites ; i++)
     {
-	spritename = namelist[i];
-	memset (sprtemp,-1, sizeof(sprtemp));
-		
-	maxframe = -1;
-	intname = *(int *)namelist[i];
+        spritename = namelist[i];
+        memset (sprtemp,-1, sizeof(sprtemp));
+
+        maxframe = -1;
+        // Improved: Check for NULL or obviously invalid pointer before dereferencing
+        // Accept only pointers in a reasonable user-space range (0x10000 - 0x80000000)
+        if (!spritename || (uintptr_t)spritename < 0x10000 || (uintptr_t)spritename >= 0x80000000)
+        {
+            sprites[i].numframes = 0;
+            continue;
+        }
+        intname = *(int *)spritename;
 	
 	// scan the lumps,
 	//  filling in the frames for whatever is found
@@ -356,32 +372,35 @@ void R_DrawMaskedColumn (column_t* column)
 	
     basetexturemid = dc_texturemid;
 	
+
+    // Defensive: skip if column is NULL or dummy
+    if (!column || column == (column_t*)0xff || column == (column_t*)0x0) return;
     for ( ; column->topdelta != 0xff ; ) 
     {
-	// calculate unclipped screen coordinates
-	//  for post
-	topscreen = sprtopscreen + spryscale*column->topdelta;
-	bottomscreen = topscreen + spryscale*column->length;
+        // calculate unclipped screen coordinates
+        //  for post
+        topscreen = sprtopscreen + spryscale*column->topdelta;
+        bottomscreen = topscreen + spryscale*column->length;
 
-	dc_yl = (topscreen+FRACUNIT-1)>>FRACBITS;
-	dc_yh = (bottomscreen-1)>>FRACBITS;
-		
-	if (dc_yh >= mfloorclip[dc_x])
-	    dc_yh = mfloorclip[dc_x]-1;
-	if (dc_yl <= mceilingclip[dc_x])
-	    dc_yl = mceilingclip[dc_x]+1;
+        dc_yl = (topscreen+FRACUNIT-1)>>FRACBITS;
+        dc_yh = (bottomscreen-1)>>FRACBITS;
+        
+        if (dc_yh >= mfloorclip[dc_x])
+            dc_yh = mfloorclip[dc_x]-1;
+        if (dc_yl <= mceilingclip[dc_x])
+            dc_yl = mceilingclip[dc_x]+1;
 
-	if (dc_yl <= dc_yh)
-	{
-	    dc_source = (byte *)column + 3;
-	    dc_texturemid = basetexturemid - (column->topdelta<<FRACBITS);
-	    // dc_source = (byte *)column + 3 - column->topdelta;
+        if (dc_yl <= dc_yh)
+        {
+            dc_source = (byte *)column + 3;
+            dc_texturemid = basetexturemid - (column->topdelta<<FRACBITS);
+            // dc_source = (byte *)column + 3 - column->topdelta;
 
-	    // Drawn by either R_DrawColumn
-	    //  or (SHADOW) R_DrawFuzzColumn.
-	    colfunc ();	
-	}
-	column = (column_t *)(  (byte *)column + column->length + 4);
+            // Drawn by either R_DrawColumn
+            //  or (SHADOW) R_DrawFuzzColumn.
+            colfunc ();    
+        }
+        column = (column_t *)(  (byte *)column + column->length + 4);
     }
 	
     dc_texturemid = basetexturemid;
@@ -620,7 +639,7 @@ void R_AddSprites (sector_t* sec)
     //  subsectors during BSP building.
     // Thus we check whether its already added.
     if (sec->validcount == validcount)
-	return;		
+	return;			
 
     // Well, now it will be done.
     sec->validcount = validcount;
@@ -800,7 +819,7 @@ void R_SortVisSprites (void)
     if (!count)
 	return;
 		
-    for (ds=vissprites ; ds<vissprite_p ; ds++)
+    for (ds = vissprites ; ds < vissprite_p ; ds++)
     {
 	ds->next = ds+1;
 	ds->prev = ds-1;
@@ -948,7 +967,6 @@ void R_DrawSprite (vissprite_t* spr)
     mceilingclip = cliptop;
     R_DrawVisSprite (spr, spr->x1, spr->x2);
 }
-
 
 
 

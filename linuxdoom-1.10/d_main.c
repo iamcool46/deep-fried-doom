@@ -39,6 +39,15 @@ static const char rcsid[] = "$Id: d_main.c,v 1.8 1997/02/03 22:45:09 b1 Exp $";
 #include <sys/stat.h>
 #include <fcntl.h>
 #endif
+#ifdef _WIN32
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <windows.h>
+#include <io.h>
+#define access _access
+#define R_OK 4
+#endif
 
 
 #include "doomdef.h"
@@ -73,8 +82,9 @@ static const char rcsid[] = "$Id: d_main.c,v 1.8 1997/02/03 22:45:09 b1 Exp $";
 
 #include "p_setup.h"
 #include "r_local.h"
-
-
+#ifdef _WIN32
+#include "win_platform.h"
+#endif
 #include "d_main.h"
 
 //
@@ -368,6 +378,10 @@ void D_DoomLoop (void)
 
     while (1)
     {
+#ifdef _WIN32
+	if (Win_QuitRequested())
+	    I_Quit();
+#endif
 	// frame syncronous IO operations
 	I_StartFrame ();                
 	
@@ -416,10 +430,10 @@ int             pagetic;
 char                    *pagename;
 
 
-//
-// D_PageTicker
-// Handles timing for warped projection
-//
+///
+/// D_PageTicker
+/// Handles timing for warped projection
+///
 void D_PageTicker (void)
 {
     if (--pagetic < 0)
@@ -428,9 +442,9 @@ void D_PageTicker (void)
 
 
 
-//
-// D_PageDrawer
-//
+///
+/// D_PageDrawer
+///
 void D_PageDrawer (void)
 {
     V_DrawPatch (0,0, 0, W_CacheLumpName(pagename, PU_CACHE));
@@ -562,19 +576,17 @@ void D_AddFile (char *file)
 //
 void IdentifyVersion (void)
 {
-
     char*	doom1wad;
     char*	doomwad;
     char*	doomuwad;
     char*	doom2wad;
-
     char*	doom2fwad;
     char*	plutoniawad;
     char*	tntwad;
+    char*	doomwaddir;
 
 #ifdef NORMALUNIX
     char *home;
-    char *doomwaddir;
     doomwaddir = getenv("DOOMWADDIR");
     if (!doomwaddir)
 	doomwaddir = ".";
@@ -612,6 +624,55 @@ void IdentifyVersion (void)
     if (!home)
       I_Error("Please set $HOME to your home directory");
     sprintf(basedefault, "%s/.doomrc", home);
+#endif
+
+#ifdef _WIN32
+    {
+        const char *dirs[4];
+        char exedir[1024];
+        char *p;
+        int ndirs = 0, d;
+        dirs[ndirs++] = ".";
+        dirs[ndirs++] = "C:\\DOOM";
+        if (GetModuleFileNameA(NULL, exedir, sizeof(exedir)))
+        {
+            for (p = exedir + strlen(exedir); p > exedir && p[-1] != '\\' && p[-1] != '/'; p--)
+                ;
+            *p = '\0';
+            if (exedir[0])
+                dirs[ndirs++] = exedir;
+        }
+        doomwaddir = ".";
+        for (d = 0; d < ndirs; d++)
+        {
+            char trypath[1024];
+            sprintf(trypath, "%s\\doom2.wad", dirs[d]);
+            if (access(trypath, R_OK) == 0) { doomwaddir = (char *)dirs[d]; break; }
+            sprintf(trypath, "%s\\doom.wad", dirs[d]);
+            if (access(trypath, R_OK) == 0) { doomwaddir = (char *)dirs[d]; break; }
+            sprintf(trypath, "%s\\doom1.wad", dirs[d]);
+            if (access(trypath, R_OK) == 0) { doomwaddir = (char *)dirs[d]; break; }
+        }
+        doom2wad   = malloc(256);
+        doomuwad   = malloc(256);
+        doomwad    = malloc(256);
+        doom1wad   = malloc(256);
+        plutoniawad = malloc(256);
+        tntwad     = malloc(256);
+        doom2fwad  = malloc(256);
+        sprintf(doom2wad, "%s\\doom2.wad", doomwaddir);
+        sprintf(doomuwad, "%s\\doomu.wad", doomwaddir);
+        sprintf(doomwad, "%s\\doom.wad", doomwaddir);
+        sprintf(doom1wad, "%s\\doom1.wad", doomwaddir);
+        sprintf(plutoniawad, "%s\\plutonia.wad", doomwaddir);
+        sprintf(tntwad, "%s\\tnt.wad", doomwaddir);
+        sprintf(doom2fwad, "%s\\doom2f.wad", doomwaddir);
+        p = getenv("APPDATA");
+        if (p && p[0])
+            sprintf(basedefault, "%s\\DOOM\\default.cfg", p);
+        else
+            strcpy(basedefault, "default.cfg");
+    }
 #endif
 
     if (M_CheckParm ("-shdev"))
@@ -797,89 +858,91 @@ void D_DoomMain (void)
 {
     int             p;
     char                    file[256];
-
     FindResponseFile ();
-	
-    IdentifyVersion ();
-	
+    /* Skip IdentifyVersion if WADs already selected (e.g. from menu) */
+    if (wadfiles[0] == NULL)
+    {
+        IdentifyVersion ();
+    }
+    else
+    {
+        /* WADs already selected, determine gamemode from first WAD */
+        char *firstwad = wadfiles[0];
+        if (strstr(firstwad, "doom1.wad"))
+            gamemode = shareware;
+        else if (strstr(firstwad, "doom.wad"))
+            gamemode = registered;
+        else if (strstr(firstwad, "doomu.wad"))
+            gamemode = retail;
+        else if (strstr(firstwad, "doom2.wad") || strstr(firstwad, "plutonia.wad") || strstr(firstwad, "tnt.wad"))
+            gamemode = commercial;
+    }
+
+    /* FORCE DOOM 1 MAPS (E1M1) EVEN IF DOOM2.WAD IS LOADED */
+    if (gamemode == commercial && getenv("FORCE_DOOM1_MAPS")) {
+        printf("[INFO] Forcing DOOM 1 mode and E1M1 map, even with DOOM2.WAD loaded.\n");
+        gamemode = registered;
+        startepisode = 1;
+        startmap = 1;
+        autostart = true;
+    }
     setbuf (stdout, NULL);
     modifiedgame = false;
-	
     nomonsters = M_CheckParm ("-nomonsters");
     respawnparm = M_CheckParm ("-respawn");
     fastparm = M_CheckParm ("-fast");
     devparm = M_CheckParm ("-devparm");
     if (M_CheckParm ("-altdeath"))
-	deathmatch = 2;
+        deathmatch = 2;
     else if (M_CheckParm ("-deathmatch"))
-	deathmatch = 1;
-
+        deathmatch = 1;
     switch ( gamemode )
     {
       case retail:
-	sprintf (title,
-		 "                         "
-		 "The Ultimate DOOM Startup v%i.%i"
-		 "                           ",
-		 VERSION/100,VERSION%100);
-	break;
+        sprintf (title,
+                 "                         "
+                 "The Ultimate DOOM Startup v%i.%i"
+                 "                           ",
+                 VERSION/100,VERSION%100);
+        break;
       case shareware:
-	sprintf (title,
-		 "                            "
-		 "DOOM Shareware Startup v%i.%i"
-		 "                           ",
-		 VERSION/100,VERSION%100);
-	break;
+        sprintf (title,
+                 "                            "
+                 "DOOM Shareware Startup v%i.%i"
+                 "                           ",
+                 VERSION/100,VERSION%100);
+        break;
       case registered:
-	sprintf (title,
-		 "                            "
-		 "DOOM Registered Startup v%i.%i"
-		 "                           ",
-		 VERSION/100,VERSION%100);
-	break;
+        sprintf (title,
+                 "                            "
+                 "DOOM Registered Startup v%i.%i"
+                 "                           ",
+                 VERSION/100,VERSION%100);
+        break;
       case commercial:
-	sprintf (title,
-		 "                         "
-		 "DOOM 2: Hell on Earth v%i.%i"
-		 "                           ",
-		 VERSION/100,VERSION%100);
-	break;
-/*FIXME
-       case pack_plut:
-	sprintf (title,
-		 "                   "
-		 "DOOM 2: Plutonia Experiment v%i.%i"
-		 "                           ",
-		 VERSION/100,VERSION%100);
-	break;
-      case pack_tnt:
-	sprintf (title,
-		 "                     "
-		 "DOOM 2: TNT - Evilution v%i.%i"
-		 "                           ",
-		 VERSION/100,VERSION%100);
-	break;
-*/
+        sprintf (title,
+                 "                         "
+                 "DOOM 2: Hell on Earth v%i.%i"
+                 "                           ",
+                 VERSION/100,VERSION%100);
+        break;
       default:
-	sprintf (title,
-		 "                     "
-		 "Public DOOM - v%i.%i"
-		 "                           ",
-		 VERSION/100,VERSION%100);
-	break;
+        sprintf (title,
+                 "                     "
+                 "Public DOOM - v%i.%i"
+                 "                           ",
+                 VERSION/100,VERSION%100);
+        break;
     }
-    
     printf ("%s\n",title);
-
     if (devparm)
-	printf(D_DEVSTR);
-    
+        printf(D_DEVSTR);
     if (M_CheckParm("-cdrom"))
     {
-	printf(D_CDROM);
-	mkdir("c:\\doomdata",0);
-	strcpy (basedefault,"c:/doomdata/default.cfg");
-    }	
+        printf(D_CDROM);
+        mkdir("c:\\doomdata",0);
+        strcpy (basedefault,"c:/doomdata/default.cfg");
+    }
     
     // turbo option
     if ( (p=M_CheckParm ("-turbo")) )
@@ -1019,7 +1082,6 @@ void D_DoomMain (void)
 
     printf ("W_Init: Init WADfiles.\n");
     W_InitMultipleFiles (wadfiles);
-    
 
     // Check for -file in shareware
     if (modifiedgame)

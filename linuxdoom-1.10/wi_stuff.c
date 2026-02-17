@@ -1798,18 +1798,19 @@ void WI_initVariables(wbstartstruct_t* wbstartstruct)
 
     wbs = wbstartstruct;
 
+    /* Silence enum type warnings by casting to int for comparisons */
 #ifdef RANGECHECKING
-    if (gamemode != commercial)
+    if ((int)gamemode != (int)commercial)
     {
-      if ( gamemode == retail )
-	RNGCHECK(wbs->epsd, 0, 3);
+      if ((int)gamemode == (int)retail)
+        RNGCHECK(wbs->epsd, 0, 3);
       else
-	RNGCHECK(wbs->epsd, 0, 2);
+        RNGCHECK(wbs->epsd, 0, 2);
     }
     else
     {
-	RNGCHECK(wbs->last, 0, 8);
-	RNGCHECK(wbs->next, 0, 8);
+        RNGCHECK(wbs->last, 0, 8);
+        RNGCHECK(wbs->next, 0, 8);
     }
     RNGCHECK(wbs->pnum, 0, MAXPLAYERS);
     RNGCHECK(wbs->pnum, 0, MAXPLAYERS);

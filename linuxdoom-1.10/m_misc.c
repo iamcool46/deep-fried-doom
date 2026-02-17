@@ -27,13 +27,39 @@
 static const char
 rcsid[] = "$Id: m_misc.c,v 1.6 1997/02/03 22:45:10 b1 Exp $";
 
+#ifdef _WIN32
+#include <stdlib.h>
+#include <io.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <ctype.h>
+#ifndef O_WRONLY
+#define O_WRONLY _O_WRONLY
+#endif
+#ifndef O_CREAT
+#define O_CREAT _O_CREAT
+#endif
+#ifndef O_TRUNC
+#define O_TRUNC _O_TRUNC
+#endif
+#ifndef O_RDONLY
+#define O_RDONLY _O_RDONLY
+#endif
+#ifndef O_BINARY
+#define O_BINARY _O_BINARY
+#endif
+#define open _open
+#define read _read
+#define write _write
+#define close _close
+#else
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <fcntl.h>
 #include <stdlib.h>
 #include <unistd.h>
-
 #include <ctype.h>
+#endif
 
 
 #include "doomdef.h"
@@ -118,7 +144,11 @@ M_WriteFile
     int		handle;
     int		count;
 	
+#ifdef _WIN32
+    handle = open ( name, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, _S_IREAD | _S_IWRITE );
+#else
     handle = open ( name, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, 0666);
+#endif
 
     if (handle == -1)
 	return false;
@@ -142,22 +172,31 @@ M_ReadFile
   byte**	buffer )
 {
     int	handle, count, length;
-    struct stat	fileinfo;
     byte		*buf;
-	
+
+#ifdef _WIN32
+    handle = open (name, O_RDONLY | O_BINARY);
+    if (handle == -1)
+	I_Error ("Couldn't read file %s", name);
+    length = (int)_filelength(handle);
+    if (length < 0)
+	I_Error ("Couldn't read file %s", name);
+#else
+    struct stat	fileinfo;
     handle = open (name, O_RDONLY | O_BINARY, 0666);
     if (handle == -1)
 	I_Error ("Couldn't read file %s", name);
     if (fstat (handle,&fileinfo) == -1)
 	I_Error ("Couldn't read file %s", name);
-    length = fileinfo.st_size;
+    length = (int)fileinfo.st_size;
+#endif
     buf = Z_Malloc (length, PU_STATIC, NULL);
     count = read (handle, buf, length);
     close (handle);
-	
+
     if (count < length)
 	I_Error ("Couldn't read file %s", name);
-		
+
     *buffer = buf;
     return length;
 }

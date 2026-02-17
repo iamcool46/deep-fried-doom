@@ -1,0 +1,17 @@
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.VC.db
+*.VC.VC.opendb
+
+# Build Folders
+bin/
+obj/
+Debug/
+Release/
+
+# Others
+*.exe
+*.pdb
+*.log

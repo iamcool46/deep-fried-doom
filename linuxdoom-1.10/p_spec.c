@@ -152,36 +152,50 @@ void P_InitPicAnims (void)
     
     //	Init animation
     lastanim = anims;
-    for (i=0 ; animdefs[i].istexture != -1 ; i++)
+    for (i=0 ; animdefs[i].istexture != 255 ; i++)
     {
-	if (animdefs[i].istexture)
-	{
-	    // different episode ?
-	    if (R_CheckTextureNumForName(animdefs[i].startname) == -1)
-		continue;	
+        // Validate start and end names are printable ASCII
+        int valid = 1;
+        for (int k = 0; k < 8; ++k) {
+            char s = animdefs[i].startname[k];
+            char e = animdefs[i].endname[k];
+            if ((s && (s < 32 || s > 126)) || (e && (e < 32 || e > 126))) {
+                valid = 0;
+                break;
+            }
+        }
+        if (!valid) {
+            printf("[WARNING] Skipping animation with invalid names: '%s' to '%s'\n", animdefs[i].startname, animdefs[i].endname);
+            continue;
+        }
+        if (animdefs[i].istexture)
+        {
+            // different episode ?
+            if (R_CheckTextureNumForName(animdefs[i].startname) == -1)
+                continue;   
 
-	    lastanim->picnum = R_TextureNumForName (animdefs[i].endname);
-	    lastanim->basepic = R_TextureNumForName (animdefs[i].startname);
-	}
-	else
-	{
-	    if (W_CheckNumForName(animdefs[i].startname) == -1)
-		continue;
+            lastanim->picnum = R_TextureNumForName (animdefs[i].endname);
+            lastanim->basepic = R_TextureNumForName (animdefs[i].startname);
+        }
+        else
+        {
+            if (W_CheckNumForName(animdefs[i].startname) == -1)
+                continue;
 
-	    lastanim->picnum = R_FlatNumForName (animdefs[i].endname);
-	    lastanim->basepic = R_FlatNumForName (animdefs[i].startname);
-	}
+            lastanim->picnum = R_FlatNumForName (animdefs[i].endname);
+            lastanim->basepic = R_FlatNumForName (animdefs[i].startname);
+        }
 
-	lastanim->istexture = animdefs[i].istexture;
-	lastanim->numpics = lastanim->picnum - lastanim->basepic + 1;
+        lastanim->istexture = animdefs[i].istexture;
+        lastanim->numpics = lastanim->picnum - lastanim->basepic + 1;
 
-	if (lastanim->numpics < 2)
-	    I_Error ("P_InitPicAnims: bad cycle from %s to %s",
-		     animdefs[i].startname,
-		     animdefs[i].endname);
-	
-	lastanim->speed = animdefs[i].speed;
-	lastanim++;
+        if (lastanim->numpics < 2)
+        {
+            printf("[WARNING] Skipping bad animation cycle from %s to %s\n", animdefs[i].startname, animdefs[i].endname);
+            continue;
+        }
+        lastanim->speed = animdefs[i].speed;
+        lastanim++;
     }
 	
 }

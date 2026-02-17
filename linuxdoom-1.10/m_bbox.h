@@ -23,7 +23,11 @@
 #ifndef __M_BBOX__
 #define __M_BBOX__
 
+#include "doomtype.h"
+
+#if defined(LINUX) && !defined(_WIN32)
 #include <values.h>
+#endif
 
 #include "m_fixed.h"
 
