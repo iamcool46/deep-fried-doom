@@ -9,3 +9,5 @@ if you open automap with tab
 basically anything i am way to scared to open this
 
 its super unstable so UHHHHHH ok i guess
+
+basically the same code base but like hit with a hammer a few times
