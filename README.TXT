@@ -11,3 +11,11 @@ basically anything i am way to scared to open this
 its super unstable so UHHHHHH ok i guess
 
 basically the same code base but like hit with a hammer a few times
+
+and also for even more legal reasons
+
+you nust OWN a doom wad to run this or it will not work
+
+and again No Doom Wads are supplied in this repo
+
+and thats about it so enjoy i guess lol
