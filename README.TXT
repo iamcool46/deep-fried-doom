@@ -21,3 +21,5 @@ and again No Doom Wads are supplied in this repo
 and thats about it so enjoy i guess lol
 
 and btw just imagine it like playing doom after a lobotomy
+
+and also if you want to exit, the exit thing does not work you have to press the windows key then close the game window or console
